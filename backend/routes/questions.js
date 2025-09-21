@@ -12,6 +12,13 @@ router.post("/", async (req, res) => {
         .json({ error: "Question text and at least 2 options are required." });
     }
 
+    const questions = await db.query(
+      "SELECT id FROM questions WHERE (timer_end IS NULL OR timer_end > NOW()) ORDER BY created_at DESC LIMIT 1"
+    );
+
+    if (questions.rows.length !== 0)
+      return res.json({ message: "Please wait, Previous question is still active", questionId : -1 });
+
     const questionResult = await db.query(
       `INSERT INTO questions (question_text, timer_duration, timer_start, timer_end) 
        VALUES ($1, $2, NOW(), NOW() + ($3 || ' seconds')::interval)
@@ -44,7 +51,7 @@ router.get("/active", async (req, res) => {
     const studentId = req.query.student_id;
 
     const questions = await db.query(
-      "SELECT id, question_text, timer_duration, timer_start, timer_end FROM questions WHERE status='active' ORDER BY created_at DESC LIMIT 1"
+      "SELECT id, question_text, timer_duration, timer_start, timer_end FROM questions WHERE (timer_end IS NULL OR timer_end > NOW())  ORDER BY created_at DESC LIMIT 1"
     );
 
     if (questions.rows.length === 0)
@@ -53,13 +60,13 @@ router.get("/active", async (req, res) => {
     const question = questions.rows[0];
 
     const options = await db.query(
-      "SELECT id, option_text, is_correct FROM options WHERE question_id = $1",
+      "SELECT id, option_text as text, is_correct FROM options WHERE question_id = $1",
       [question.id]
     );
 
     let answered = false;
 
-    if (studentId) {
+    if (studentId != -1) {
       const answers = await db.query(
         "SELECT id FROM answers WHERE question_id = $1 AND student_id = $2",
         [question.id, studentId]
@@ -79,7 +86,7 @@ router.get("/:id/votes", async (req, res) => {
     const question_id = req.params.id;
 
     const votes = await db.query(
-      `SELECT o.id AS option_id, o.option_text, COUNT(a.id) AS count
+      `SELECT o.id AS option_id, o.option_text as text, COUNT(a.id) AS count
        FROM options o
        LEFT JOIN answers a ON o.id = a.option_id AND a.question_id = $1
        WHERE o.question_id = $1
@@ -106,7 +113,7 @@ router.get("/history", async (req, res) => {
 
     for (const q of questions.rows) {
       const options = await db.query(
-        `SELECT o.id, o.option_text, COUNT(a.id) as votes
+        `SELECT o.id, o.option_text as text, COUNT(a.id) as votes
          FROM options o
          LEFT JOIN answers a ON o.id = a.option_id
          WHERE o.question_id = $1

@@ -1,14 +1,8 @@
 import styles from "./PollOption.module.css";
-
-interface PollOptionProps {
-  selected?: boolean;
-  onClick?: () => void;
-  content: string;
-  percentage?: number; 
-  submitted?:boolean;
-}
+import type { PollOptionProps } from "./types";
 
 const PollOption: React.FC<PollOptionProps> = ({
+  idx,
   selected = false,
   onClick,
   content,
@@ -21,7 +15,7 @@ const PollOption: React.FC<PollOptionProps> = ({
       onClick={onClick}
       style={{ cursor: !submitted ? "pointer" : "default" }}
     >
-      <label className={styles.label}>1</label>
+      <label className={styles.label}>{idx}</label>
       <span className={styles.content}>{content}</span>
       <span className={`absolute right-2 z-1 font-semibold ${!submitted?"hidden":""}`}>{percentage}%</span>
       <span

@@ -9,14 +9,20 @@ function App() {
   const location = useLocation();
 
   return (
-      <Routes location={location} key={location.pathname}>
-        <Route path="/" element={<Home />} />
-        <Route path="/student" element={<Student />} />
-        <Route path="/student/questionaire" element={<Questionaire user="student"/>} />
-        <Route path="/teacher" element={<Teacher />} />
-        <Route path="/teacher/questionaire" element={<Questionaire user="teacher"/>} />
-        <Route path="/teacher/history" element={<PollHistory user="teacher"/>} />
-      </Routes>
+    <Routes location={location} key={location.pathname}>
+      <Route path="/" element={<Home />} />
+      <Route path="/student">
+        <Route index element={<Student />} />
+        <Route path="questionaire" element={<Questionaire user="student" />} />
+      </Route>
+
+      <Route path="/teacher">
+        <Route index element={<Teacher />} />
+        <Route path="questionaire" element={<Questionaire user="teacher" />} />
+        <Route path="history" element={<PollHistory user="teacher" />} />
+        <Route path=":fromstart" element={<Teacher />} />
+      </Route>
+    </Routes>
   );
 }
 

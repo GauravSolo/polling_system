@@ -7,7 +7,7 @@ import PageWrapper from "../../Pagewrapper";
 interface PollHistoryItem {
   id: number;
   question_text: string;
-  options: { id: number; option_text: string; votes: number }[];
+  options: { id: number; text: string; votes: number }[];
   timer_duration: number;
   timer_start: string;
   timer_end: string;
@@ -61,14 +61,13 @@ const PollHistory: React.FC<PollHistoryProps> = ({ user }) => {
               timer_end: poll.timer_end,
               options: poll.options.map((opt) => ({
                 id: opt.id,
-                text: opt.option_text,
+                text: opt.text,
                 isCorrect: false,
                 percentage: totalVotes
                   ? Math.round((opt.votes * 100) / totalVotes)
                   : 0,
               })) as Option[],
             };
-
             return (
               <div className="mb-5" key={poll.id}>
                 <Poll

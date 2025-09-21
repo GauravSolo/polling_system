@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button, Heading, Question } from "../../components";
 import PageWrapper from "../../Pagewrapper";
 import type { Option } from "../../types";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 function Teacher() {
   const [question, setQuestion] = useState("");
@@ -13,6 +13,8 @@ function Teacher() {
   ]);
   const API_URL = import.meta.env.VITE_API_URL;
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const hasFromStart = searchParams.has("fromstart");
 
   const handleAddOption = () => {
     setOptions([
@@ -42,18 +44,22 @@ function Teacher() {
       }
 
       const data = await res.json();
+      if(data.questionId == -1){
+        alert(data.message);
+        return;
+      }
       if (data) {
         navigate("/teacher/questionaire");
       }
     } catch (err) {
       console.error("Error submitting question:", err);
-      alert("Something went wrong while submitting question!");
+      alert("Question text and at least 2 options are required.");
     }
   };
 
   return (
     <PageWrapper>
-      <div className="flex flex-col gap-y-9 items-start justify-center mx-50 pt-15 py-10 mb-auto">
+      <div className="flex flex-col gap-y-9 items-start justify-center mx-50 pt-15 py-10 mb-auto  my-auto">
         <Button
           icon={
             <svg
@@ -72,13 +78,15 @@ function Teacher() {
           label="Intervue Poll"
           type="pill"
         />
-        <Heading
-          content="Let's Get Started"
-          boldTextHeading="Get Started"
-          para="you'll have the ability to create and manage polls, ask questions, and monitor your students' responses in real-time."
-          boldTextPara=""
-          align="left"
-        />
+        {!hasFromStart && (
+          <Heading
+            content="Let's Get Started"
+            boldTextHeading="Get Started"
+            para="you'll have the ability to create and manage polls, ask questions, and monitor your students' responses in real-time."
+            boldTextPara=""
+            align="left"
+          />
+        )}
         <Question
           question={question}
           options={options}

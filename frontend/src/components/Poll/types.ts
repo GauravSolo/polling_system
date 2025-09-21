@@ -12,8 +12,10 @@ interface Question {
 export interface PollProps{
     selected?:boolean;
     user?: string;
-    question: Question;
+    question: Question | null;
     submitted: boolean;
     setSubmitted: (submitted:boolean)=>void;
     asked?:number;
+    selectedOption?:number | null;
+    setSelectedOption?:(selectedOption:number)=>void;
 }

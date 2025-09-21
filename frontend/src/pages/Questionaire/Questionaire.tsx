@@ -4,20 +4,25 @@ import { Button, Poll, Spinner } from "../../components";
 import PageWrapper from "../../Pagewrapper";
 import type { QuestionaireProps } from "./types";
 import { useNavigate } from "react-router-dom";
+import type { PollProps } from "../../components/Poll/types";
 
 const Questionaire: React.FC<QuestionaireProps> = ({ user }) => {
   const [loading, setLoading] = useState<boolean>(true);
-  const [activeQuestion, setActiveQuestion] = useState<any>(null);
+  const [activeQuestion, setActiveQuestion] = useState<PollProps["question"] | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [asked, setAsked] = useState(1);
   const navigate = useNavigate();
   const st = new Set();
   const API_URL = import.meta.env.VITE_API_URL;
+  const [selectedOption, setSelectedOption] = useState<number | null>(null);
 
   useEffect(() => {
+    if (user == "teacher") setSubmitted(true);
+  }, [user]);
+  useEffect(() => {
     const fetchQuestion = async () => {
-      const data = localStorage.getItem("student");
-      if (!data) return;
+      let data = localStorage.getItem("student");
+      if (!data) data = JSON.stringify({ id: -1 });
       const student = JSON.parse(data);
       try {
         const res = await fetch(
@@ -28,7 +33,7 @@ const Questionaire: React.FC<QuestionaireProps> = ({ user }) => {
           st.add(data.id);
           setAsked(st.size);
           setActiveQuestion(data);
-          setSubmitted(data.answered);
+          if (user == "student") setSubmitted(data.answered);
           setLoading(false);
         }
       } catch (err) {
@@ -37,9 +42,41 @@ const Questionaire: React.FC<QuestionaireProps> = ({ user }) => {
     };
 
     fetchQuestion();
-    const interval = setInterval(fetchQuestion, 1000);
+    const interval = setInterval(fetchQuestion, 2000);
     return () => clearInterval(interval);
   }, []);
+
+  const submitAnswer = async () => {
+    if (user == "teacher") return;
+    if (!selectedOption || !activeQuestion) {
+      alert("Please select option");
+      return;
+    }
+    const data = localStorage.getItem("student");
+    if (!data) return;
+    const student = JSON.parse(data);
+    try {
+      await fetch(`${API_URL}/answers/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          question_id: activeQuestion.id,
+          option_id: selectedOption,
+          student_id: student.id,
+        }),
+      });
+      setSubmitted(true);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to submit answer.");
+    }
+  };
+
+  const askNewQuestion = () => {
+    navigate("/teacher?fromstart");
+  };
+
+
   return (
     <PageWrapper>
       <div className="flex gap-y-9 items-center justify-center my-auto">
@@ -47,10 +84,19 @@ const Questionaire: React.FC<QuestionaireProps> = ({ user }) => {
           {loading ? (
             <>
               <Spinner />
-              {user === "student" && (
+              {user === "student" ? (
                 <h2 className="font-bold flex justify-center text-2xl mt-12">
                   Wait for the teacher to ask a new question..
                 </h2>
+              ) : (
+                <div className="flex justify-end py-6">
+                  <Button
+                    label="+ Ask a new question"
+                    type="button"
+                    onClick={askNewQuestion}
+                    style={{ width: "300px" }}
+                  />
+                </div>
               )}
             </>
           ) : (
@@ -61,7 +107,33 @@ const Questionaire: React.FC<QuestionaireProps> = ({ user }) => {
                 question={activeQuestion}
                 submitted={submitted}
                 setSubmitted={(val) => setSubmitted(val)}
+                selectedOption={selectedOption}
+                setSelectedOption={(id)=>setSelectedOption(id)}
               />
+              {user == "student" ? (
+                submitted ? (
+                  <h2 className="font-bold flex justify-center text-2xl mt-12">
+                    Wait for the teacher to ask a new question..
+                  </h2>
+                ) : (
+                  <div className="flex justify-end py-6">
+                    <Button
+                      label="Submit"
+                      type="button"
+                      onClick={submitAnswer}
+                    />
+                  </div>
+                )
+              ) : (
+                <div className="flex justify-end py-6">
+                  <Button
+                    label="+ Ask a new question"
+                    type="button"
+                    onClick={askNewQuestion}
+                    style={{ width: "300px" }}
+                  />
+                </div>
+              )}
             </>
           )}
         </div>

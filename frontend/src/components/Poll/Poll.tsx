@@ -3,16 +3,20 @@ import { useEffect, useState } from "react";
 import PollOption from "../PollOption/PollOption";
 import styles from "./Poll.module.css";
 import type { PollProps } from "./types";
-import Button from "../Button/Button";
-const Poll: React.FC<PollProps> = ({ user, question, submitted, setSubmitted, asked}) => {
-  const [selectedOption, setSelectedOption] = useState<number | null>(null);
+
+const Poll: React.FC<PollProps> = ({
+  user,
+  question,
+  submitted,
+  setSubmitted,
+  asked,
+  selectedOption,
+  setSelectedOption,
+}) => {
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [votes, setVotes] = useState<{ [optionId: number]: number }>({});
   const [totalVotes, setTotalVotes] = useState(0);
   const API_URL = import.meta.env.VITE_API_URL;
-
-
-
 
   useEffect(() => {
     if (!question) return;
@@ -21,69 +25,48 @@ const Poll: React.FC<PollProps> = ({ user, question, submitted, setSubmitted, as
     const interval = setInterval(() => {
       const diff = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
       setTimeLeft(diff);
-      if (diff === 0) clearInterval(interval);
+      if (diff === 0) {
+        setSubmitted(true);
+        clearInterval(interval);
+      }
     }, 1000);
     return () => clearInterval(interval);
   }, [question]);
 
-
-
-
-  const submitAnswer = async () => {
-    if (!selectedOption || !question) {
-      alert("Please select option");
-      return;
-    }
-    const data = localStorage.getItem("student");
-    if (!data) return;
-    const student = JSON.parse(data);
-    try {
-      await fetch(`${API_URL}/answers/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          question_id: question.id,
-          option_id: selectedOption,
-          student_id: student.id,
-        }),
-      });
-      setSubmitted(true);
-    } catch (err) {
-      console.error(err);
-      alert("Failed to submit answer.");
-    }
-  };
-
-  const askNewQuestion = () => {};
-
+ 
   useEffect(() => {
     if (!question) return;
 
     const fetchVotes = async () => {
       try {
-        const res = await fetch(`${API_URL}/questions/${question.id}/votes`);
+        const res = await fetch(
+          `${API_URL}/questions/${question.id}/votes`
+        );
         const data = await res.json();
         const voteMap: { [key: number]: number } = {};
         let total = 0;
         data.forEach((item: any) => {
-          voteMap[item.option_id] = item.count;
-          total += item.count;
+          const count = Number(item.count);
+          voteMap[item.option_id] = count;
+          total += count;
         });
         setVotes(voteMap);
         setTotalVotes(total);
       } catch (err) {
         console.error(err);
+        setVotes({});
+        setTotalVotes(0);
       }
     };
 
     fetchVotes();
   }, [question, submitted]);
 
-  if (!question) return null;
+
   return (
     <>
       {user == "teacher" ? (
-        <label className={styles.questionLabel}>Question  {asked}</label>
+        <label className={styles.questionLabel}>Question {asked}</label>
       ) : (
         <div className="flex items-center">
           <label className={styles.questionLabel}>Question {asked}</label>
@@ -109,19 +92,19 @@ const Poll: React.FC<PollProps> = ({ user, question, submitted, setSubmitted, as
         </div>
       )}
       <div className={styles.poll}>
-        <label className={styles.label}>{question.question_text}</label>
+        <label className={styles.label}>{question?.question_text}</label>
         <div className="flex flex-col w-full gap-y-3 ps-3 grow-1 pt-7 pr-7 border-1 h-full border-[#AF8FF1] rounded-b-lg">
-          {question.options.map((opt: any) => {
-           const percentage = totalVotes
-              ? Math.round(((votes[opt.id] || 0) * 100) / totalVotes)
-              : 0;
-
+          {question?.options.map((opt: any, idx) => {
+            const optionVotes = votes[opt.id] || 0;
+            const percentage =
+              totalVotes > 0 ? Math.round((optionVotes * 100) / totalVotes) : 0;
             return (
               <PollOption
+                idx={idx+1}
                 key={opt.id}
-                selected={selectedOption === opt.id}
-                onClick={() => (!submitted && setSelectedOption(opt.id))}
-                content={opt.option_text}
+                selected={!submitted && selectedOption === opt.id}
+                onClick={() => !submitted && setSelectedOption && setSelectedOption(opt.id)}
+                content={opt.text}
                 percentage={percentage}
                 submitted={submitted}
               />
@@ -129,25 +112,6 @@ const Poll: React.FC<PollProps> = ({ user, question, submitted, setSubmitted, as
           })}
         </div>
       </div>
-      {submitted ? (
-        user == "student" && (
-          <h2 className="font-bold flex justify-center text-2xl mt-12">
-            Wait for the teacher to ask a new question..
-          </h2>
-        )
-      ) : (
-        <div className="flex justify-end py-6">
-          <Button
-            label={user === "teacher" ? "+ Ask a new question" : "Submit"}
-            type="button"
-            onClick={() => {
-              if (user === "teacher") askNewQuestion();
-              else submitAnswer();
-            }}
-            style={user === "teacher" ? { width: "300px" } : {}}
-          />
-        </div>
-      )}
     </>
   );
 };
