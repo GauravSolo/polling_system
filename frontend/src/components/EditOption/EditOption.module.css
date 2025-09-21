@@ -1,0 +1,37 @@
+.pill{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #ffffff;
+    font-size: 11px;
+    height: 24px;
+    width: 24px;
+    border-radius: 50%;
+    background: linear-gradient(243.94deg, #8F64E1 -50.82%, #4E377B 216.33%);
+    margin-right: 10px;
+}
+.label{
+    font-size: 18px;
+    font-weight: 550;
+    margin-left: 5px;
+}
+.input{
+    height: 60px;
+    width: 507px;
+    border-radius: 2px;
+    background-color: #F2F2F2;
+    font-size: 18px;
+    padding-left: 23px;
+}
+
+.input:focus{
+    outline: none;
+}
+
+.radio{
+    width: 22px;
+    height: 22px;
+    border: 2px solid #8F64E1;
+    accent-color: #8F64E1;
+    cursor: pointer;
+}

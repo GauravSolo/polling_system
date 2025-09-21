@@ -1,0 +1,30 @@
+.parent {
+  display: flex;
+  flex-direction: column;
+  gap: 17px;
+  color: #000000;
+  padding: 15px 17px 15px 25px;
+  border-radius: 10px;
+  border: 1px solid #d9d9d9;
+  width: 387px;
+  height: 143px;
+  cursor: pointer;
+}
+
+.heading {
+  font-size: 23px;
+  font-weight: bold;
+}
+.para {
+  color: #00000080;
+  font-family: Sora;
+  font-weight: 600;
+  font-size: 16px;
+  margin-top: -15px;
+}
+
+.selected {
+   background: linear-gradient(white, white) padding-box,
+    linear-gradient(92.24deg, #7765da -8.5%, #1d68bd 101.3%) border-box;
+  border: 3px solid transparent;
+}

@@ -1,0 +1,28 @@
+.parent{
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    width: 737px;
+    color: #000000;
+}
+
+.heading{
+    font-size: 40px;
+}
+.para{
+    font-size: 19px;
+    color: #00000080;
+    margin-top: 0px;
+}
+
+.left {
+  text-align: left;
+}
+
+.center {
+  text-align: center;
+}
+
+.right {
+  text-align: right;
+}

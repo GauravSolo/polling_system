@@ -1,0 +1,21 @@
+.parent{
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    gap: 12px;
+}
+.label{
+    font-size: 18px;
+}
+.input{
+    height: 60px;
+    width: 507px;
+    border-radius: 2px;
+    background-color: #F2F2F2;
+    font-size: 18px;
+    padding-left: 23px;
+}
+
+.input:focus{
+    outline: none;
+}

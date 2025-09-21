@@ -1,0 +1,24 @@
+.poll{
+    display: flex;
+    flex-direction: column;
+    width: 727px;
+    min-height: 353px;
+    margin-top: 20px;
+}
+
+.label{
+    display: flex;
+    align-items: center;
+    padding-inline: 0.75rem;
+    height: 50px;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    color: #ffffff;
+    font-weight: 400;
+    background: linear-gradient(90deg, #343434 0%, #6E6E6E 100%);
+}
+
+.questionLabel {
+  font-size: 22px;
+  font-weight: bold;
+}

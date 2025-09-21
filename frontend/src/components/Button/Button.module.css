@@ -1,0 +1,49 @@
+/* Gradient button */
+.button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 234px;
+  height: 58px;
+  border-radius: 34px;
+  font-weight: 600;
+  font-size: 18px;
+  color: white;
+  background: linear-gradient(99.18deg, #8F64E1 -46.89%, #1D68BD 223.45%);
+  border: none;
+  cursor: pointer;
+}
+
+.buttonLabel{
+    font-size: 18px;
+}
+
+.pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 134px;
+  height: 31px;
+  padding: 0 9px;
+  border-radius: 24px;
+  line-height: 100%;
+  color: white;
+  background: linear-gradient(90deg, #7565D9 0%, #4D0ACD 100%);
+  border: none;
+  margin-bottom: -10px;
+  cursor: default;
+}
+
+.pillLabel{
+    font-family: 'Sora', sans-serif;
+    width: 91px;
+    height: 18px;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.disabled{
+  cursor: not-allowed;
+}
