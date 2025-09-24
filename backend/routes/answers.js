@@ -1,13 +1,16 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../db");
+const ws = require("../websocket");
 
 router.post("/", async (req, res) => {
   try {
     const { question_id, student_id, option_id } = req.body;
 
     if (!question_id || !student_id || !option_id) {
-      return res.status(400).json({ error: "question_id, student_id and option_id are required" });
+      return res
+        .status(400)
+        .json({ error: "question_id, student_id and option_id are required" });
     }
 
     const existing = await db.query(
@@ -16,7 +19,9 @@ router.post("/", async (req, res) => {
     );
 
     if (existing.rows.length > 0) {
-      return res.status(400).json({ error: "Student has already answered this question" });
+      return res
+        .status(400)
+        .json({ error: "Student has already answered this question" });
     }
 
     await db.query(
@@ -24,6 +29,13 @@ router.post("/", async (req, res) => {
       [question_id, student_id, option_id]
     );
 
+
+    try {
+      await ws.broadcastActive();
+    } catch (e) {
+      console.error("WS broadcast error after answer insert", e);
+    }
+    
     res.status(201).json({ message: "Answer submitted successfully" });
   } catch (err) {
     console.error(err);

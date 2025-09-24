@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../db");
+const ws = require('../websocket');
 
 router.post("/", async (req, res) => {
   try {
@@ -36,6 +37,12 @@ router.post("/", async (req, res) => {
     });
 
     await Promise.all(optionPromises);
+
+     try {
+      await ws.broadcastActive();
+    } catch (e) {
+      console.error('WS broadcast error after question create', e);
+    }
 
     res
       .status(201)

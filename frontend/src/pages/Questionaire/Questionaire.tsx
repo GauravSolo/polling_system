@@ -8,7 +8,9 @@ import type { PollProps } from "../../components/Poll/types";
 
 const Questionaire: React.FC<QuestionaireProps> = ({ user }) => {
   const [loading, setLoading] = useState<boolean>(true);
-  const [activeQuestion, setActiveQuestion] = useState<PollProps["question"] | null>(null);
+  const [activeQuestion, setActiveQuestion] = useState<
+    PollProps["question"] | null
+  >(null);
   const [submitted, setSubmitted] = useState(false);
   const [asked, setAsked] = useState(1);
   const navigate = useNavigate();
@@ -19,32 +21,91 @@ const Questionaire: React.FC<QuestionaireProps> = ({ user }) => {
   useEffect(() => {
     if (user == "teacher") setSubmitted(true);
   }, [user]);
+  // useEffect(() => {
+  //   const fetchQuestion = async () => {
+  //     let data = localStorage.getItem("student");
+  //     if (!data) data = JSON.stringify({ id: -1 });
+  //     const student = JSON.parse(data);
+  //     try {
+  //       const res = await fetch(
+  //         `${API_URL}/questions/active?student_id=${student?.id}`
+  //       );
+  //       const data = await res.json();
+  //       if (data.id) {
+  //         st.add(data.id);
+  //         setAsked(st.size);
+  //         setActiveQuestion(data);
+  //         if (user == "student") setSubmitted(data.answered);
+  //         setLoading(false);
+  //       }
+  //     } catch (err) {
+  //       console.error(err);
+  //     }
+  //   };
+
+  //   fetchQuestion();
+  //   const interval = setInterval(fetchQuestion, 2000);
+  //   return () => clearInterval(interval);
+  // }, []);
+
   useEffect(() => {
-    const fetchQuestion = async () => {
-      let data = localStorage.getItem("student");
-      if (!data) data = JSON.stringify({ id: -1 });
-      const student = JSON.parse(data);
-      try {
-        const res = await fetch(
-          `${API_URL}/questions/active?student_id=${student?.id}`
+    const rawApi = API_URL || window.location.origin;
+    const wsUrl = rawApi.replace(/^http/, "ws") + "/ws";
+    let ws: WebSocket | null = null;
+    let reconnectTimer: any = null;
+    const connect = () => {
+      ws = new WebSocket(wsUrl);
+
+      ws.onopen = () => {
+        console.log("WS open");
+        const data = localStorage.getItem("student");
+        const student = data ? JSON.parse(data) : { id: -1 };
+        ws!.send(
+          JSON.stringify({
+            type: "register",
+            studentId: student.id ?? -1,
+            role: user,
+          })
         );
-        const data = await res.json();
-        if (data.id) {
-          st.add(data.id);
-          setAsked(st.size);
-          setActiveQuestion(data);
-          if (user == "student") setSubmitted(data.answered);
-          setLoading(false);
+      };
+
+      ws.onmessage = (evt) => {
+        try {
+          const msg = JSON.parse(evt.data);
+          if (msg.type === "active_question") {
+            const q = msg.payload;
+            setActiveQuestion(q);
+             st.add(q.id);
+            setAsked(st.size);
+            if (user === "student") setSubmitted(Boolean(q.answered));
+            setLoading(false);
+          } else if (msg.type === "no_active") {
+            setActiveQuestion(null);
+            setLoading(true);
+          }
+        } catch (err) {
+          console.error("WS message parse err", err);
         }
-      } catch (err) {
-        console.error(err);
-      }
+      };
+
+      ws.onclose = (e) => {
+        console.log("WS closed, reconnecting...", e.reason);
+        reconnectTimer = setTimeout(connect, 2000);
+      };
+
+      ws.onerror = (err) => {
+        console.error("WS error", err);
+        ws?.close();
+      };
     };
 
-    fetchQuestion();
-    const interval = setInterval(fetchQuestion, 2000);
-    return () => clearInterval(interval);
-  }, []);
+    connect();
+
+    return () => {
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      if (ws) ws.close();
+    };
+  }, [API_URL, user]);
 
   const submitAnswer = async () => {
     if (user == "teacher") return;
@@ -75,7 +136,6 @@ const Questionaire: React.FC<QuestionaireProps> = ({ user }) => {
   const askNewQuestion = () => {
     navigate("/teacher?fromstart");
   };
-
 
   return (
     <PageWrapper>
@@ -108,7 +168,7 @@ const Questionaire: React.FC<QuestionaireProps> = ({ user }) => {
                 submitted={submitted}
                 setSubmitted={(val) => setSubmitted(val)}
                 selectedOption={selectedOption}
-                setSelectedOption={(id)=>setSelectedOption(id)}
+                setSelectedOption={(id) => setSelectedOption(id)}
               />
               {user == "student" ? (
                 submitted ? (
